@@ -6,12 +6,8 @@ Request caching and buffering is a common requirement in backend development. As
 when the incomming request uses those two mechanism.
 
 https://github.com/vektah/dataloaden proposes an implementation that generates code to handle both issues.
-However, I found that the implementation has limits:
-
-	* it has no native use of request context, though a workaround exists in the FAQ
-	* it does not distinguises caching and buffering. Some requests cannot be cached but can be buffered, and vice versa. With dataloaden, you cannot do one without the other.
-
-This package (aims to) provide both logics in an independant, yet combinable way.
+However, the implementation does not distinguises caching and buffering. Some requests cannot be cached but can be buffered, and vice versa.
+This package (aims to) provide both features in an independant, yet combinable way.
 
 SQL example
 
@@ -34,5 +30,20 @@ Benefits of caching and buffering would be:
 	* Caching each row responded by A or B may be interesting, if we decide to use a unique key such as the primary key.
 	* Buffering the request is definitely interesting, as it reduces the number of SQL queries executed.
 
+Finaly, the initialization of the buffer or cache must be cheap. They are meant to be scoped to a unique job such as a http request.
+
+Definitions
+
+The following definitions must be evaluated in regard of this package's context.
+Note that the request is agnostic of the backend (REST, HTTP, SQL, Redis...).
+
+Buffering
+
+Buffering consists in aggregating similar requests emitted during a short period of time, to send a unique, bigger request.
+
+Caching
+
+Caching consists in saving, in memory, the response of a request for a short period of time. This response must be accessible with
+a unique identification that is tied to the request.
 */
 package xload

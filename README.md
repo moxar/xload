@@ -8,14 +8,11 @@
 ## Motivation
 
 Request caching and buffering is a common requirement in backend development. As an example, GraphQL performance enhances a lot
-when the incomming request uses those two mechanism. 
+when the incomming request uses those two mechanism.
 
 [dataloader](https://github.com/vektah/dataloaden) proposes an implementation that generates code to handle both issues.
-However, I found that the implementation has limits:
-* it has no native use of request context, though a workaround exists in the FAQ
-* it does not distinguises caching and buffering. Some requests cannot be cached but can be buffered, and vice versa. With dataloaden, you cannot do one without the other.
-
-This package (aims to) provide both logics in an independant, yet combinable way.
+However, the implementation does not distinguises caching and buffering. Some requests cannot be cached but can be buffered, and vice versa.
+This package (aims to) provide both features in an independant, yet combinable way.
 
 ### SQL demonstration
 ```SQL
@@ -36,6 +33,7 @@ SELECT * FROM users WHERE name LIKE "%Lois%" OR name LIKE "%Clark%";
 
 _Note: the buffering strategy matters and may change from one request to another. Some would use `UNION`, other `WHERE ... OR`, etc._
 
+Finaly, the initialization of the buffer or cache must be cheap. They are meant to be scoped to a unique job such as a http request.
 
 ## Definitions
 
