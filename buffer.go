@@ -45,7 +45,9 @@ func (b *Buffer) run(ctx context.Context, reqs []*request) {
 			continue
 		}
 		r.err = err
-		r.out = r.in.Pick(out)
+		if err == nil {
+			r.out = r.in.Pick(out)
+		}
 		close(r.done)
 	}
 }
@@ -133,6 +135,9 @@ func NewBuffer(ctx context.Context, op Operation, size int, freq time.Duration) 
 // and no context should be prefered.
 // Do returns an error when the buffer's context is done to prevent dead requests.
 func (b *Buffer) Do(p Fragment) (interface{}, error) {
+	if p == nil {
+		return nil, errors.New("cannot buffer request with nil Fragment")
+	}
 	r := newRequest(p)
 	select {
 	case <-b.ctx.Done():
