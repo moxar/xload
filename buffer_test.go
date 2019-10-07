@@ -21,11 +21,17 @@ func (i n) Pick(collection interface{}) interface{} {
 	return nil
 }
 
-func bufferizeNs(ctx context.Context, fragments ...Fragment) (interface{}, error) {
+func bufferizeNs(ctx context.Context, interfaces ...interface{}) (interface{}, error) {
 	m := make(map[int]struct{})
 	var out []int
-	for _, f := range fragments {
-		i := int(f.(n))
+	for _, f := range interfaces {
+		var i int
+		switch t := f.(type) {
+		case n:
+			i = int(t)
+		case int:
+			i = t
+		}
 		if _, ok := m[i]; ok {
 			continue
 		}
@@ -39,7 +45,7 @@ func bufferizeNs(ctx context.Context, fragments ...Fragment) (interface{}, error
 func TestBuffer(t *testing.T) {
 
 	type Job struct {
-		Input  Fragment
+		Input  interface{}
 		Output int
 		Err    error
 	}
