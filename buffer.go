@@ -29,18 +29,14 @@ type Buffer struct {
 
 // run is the function called on each cycle.
 func (b *Buffer) run(ctx context.Context, reqs []*request) {
-
-	fragments := make([]interface{}, len(reqs))
-	var ignore int
-	for i, r := range reqs {
-		if r == nil {
-			ignore++
-			continue
+	fragments := make([]interface{}, 0, len(reqs))
+	for _, r := range reqs {
+		if r != nil {
+			fragments = append(fragments, r.in)
 		}
-		fragments[i] = r.in
 	}
 
-	out, err := b.op(ctx, fragments[:len(fragments)-ignore]...)
+	out, err := b.op(ctx, fragments...)
 	for _, r := range reqs {
 		if r == nil {
 			continue
@@ -69,9 +65,11 @@ func NewBuffer(ctx context.Context, op Operation, size int, freq time.Duration) 
 	timer := time.NewTimer(freq)
 
 	cycle := func(buf []*request) int {
+		// check if buf is empty [nil, nil, nil, ...]
 		if buf[0] != nil {
 			b.run(b.ctx, buf)
 		}
+		// reset buffer
 		for k := range buf {
 			buf[k] = nil
 		}
