@@ -56,6 +56,10 @@ func NewBuffer(ctx context.Context, op Operation, size int, freq time.Duration) 
 		panic(errors.New("non-positive size for NewBuffer"))
 	}
 
+	// The pending channel is never closed:
+	// We follow the N sender, one receiver pattern, and don't want to break the channel closing principle:
+	// The channel sender is the owner of the channel: he is the only one allowed to close it.
+	// https://go101.org/article/channel-closing.html
 	b := &Buffer{
 		op:      op,
 		pending: make(chan *request, size),
@@ -90,29 +94,23 @@ func NewBuffer(ctx context.Context, op Operation, size int, freq time.Duration) 
 		buf := make([]*request, size)
 		var i int
 
-		var closed bool
-		closeOnce := func() {
-			if !closed {
-				closed = true
-				close(b.pending)
-			}
-		}
-
 		for {
 			select {
 
+			// When the context is done, the loop is infinite.
+			// Purge the pending chan
 			case <-ctx.Done():
-				closeOnce()
+				cycle(buf)
+				timer.Stop()
+				for r := range b.pending {
+					r.out, r.err = nil, b.ctx.Err()
+					close(r.done)
+				}
 
 			case <-timer.C:
 				i = cycle(buf)
 
-			case r, ok := <-b.pending:
-				if !ok {
-					cycle(buf)
-					timer.Stop()
-					return
-				}
+			case r := <-b.pending:
 
 				buf[i] = r
 				i++
@@ -138,6 +136,8 @@ func (b *Buffer) Do(v interface{}) (interface{}, error) {
 		return nil, b.ctx.Err()
 	default:
 		select {
+		case <-b.ctx.Done():
+			return nil, b.ctx.Err()
 		case b.pending <- r:
 			return r.res()
 		}
