@@ -1,4 +1,4 @@
-# Permz
+# Xload
 
 [![Godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/moxar/xload)
 [![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/moxar/xload/master/LICENSE)
